@@ -11,20 +11,19 @@ import '../../domain/usecases/google_login_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
+import '../../domain/usecases/resend_otp_usecase.dart';
 import '../../domain/usecases/reset_password_usecase.dart';
+import '../../domain/usecases/verify_otp_usecase.dart';
 
-// Google OAuth client IDs from the Google Cloud Console — see
-// frontend/README.md's "Google Sign-In setup" section. Overridable per
-// build: --dart-define=GOOGLE_CLIENT_ID=... --dart-define=GOOGLE_SERVER_CLIENT_ID=...
 const _googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
 const _googleServerClientId = '772943108023-a4183nfu8p3coigkcs3d2v7ir9ct6dla.apps.googleusercontent.com';
 
 final authRemoteDataSourceProvider = Provider(
-  (ref) => AuthRemoteDataSource(ref.watch(dioProvider)),
+      (ref) => AuthRemoteDataSource(ref.watch(dioProvider)),
 );
 
 final googleAuthDataSourceProvider = Provider(
-  (ref) => GoogleAuthDataSource(
+      (ref) => GoogleAuthDataSource(
     clientId: _googleClientId.isEmpty ? null : _googleClientId,
     serverClientId: _googleServerClientId.isEmpty ? null : _googleServerClientId,
   ),
@@ -40,6 +39,8 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 final loginUseCaseProvider = Provider((ref) => LoginUseCase(ref.watch(authRepositoryProvider)));
 final registerUseCaseProvider = Provider((ref) => RegisterUseCase(ref.watch(authRepositoryProvider)));
+final verifyOtpUseCaseProvider = Provider((ref) => VerifyOtpUseCase(ref.watch(authRepositoryProvider)));
+final resendOtpUseCaseProvider = Provider((ref) => ResendOtpUseCase(ref.watch(authRepositoryProvider)));
 final googleLoginUseCaseProvider = Provider((ref) => GoogleLoginUseCase(ref.watch(authRepositoryProvider)));
 final logoutUseCaseProvider = Provider((ref) => LogoutUseCase(ref.watch(authRepositoryProvider)));
 final getCurrentUserUseCaseProvider = Provider((ref) => GetCurrentUserUseCase(ref.watch(authRepositoryProvider)));

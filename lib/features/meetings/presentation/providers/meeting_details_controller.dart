@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meetmind_ai/features/auth/presentation/providers/auth_controller.dart';
+import 'package:meetmind_ai/features/meetings/presentation/providers/dashboard_meeting_provider.dart';
 
 import '../../domain/entities/meeting.dart';
 import 'meeting_providers.dart';
@@ -39,17 +40,17 @@ class MeetingDetailsController extends AutoDisposeFamilyAsyncNotifier<Meeting, S
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() => ref.read(updateMeetingUseCaseProvider)(
-          arg,
-          title: title,
-          description: description,
-          date: date,
-          time: time,
-          location: location,
-          onlineLink: onlineLink,
-          priority: priority,
-          category: category,
-          tags: tags,
-        ));
+      arg,
+      title: title,
+      description: description,
+      date: date,
+      time: time,
+      location: location,
+      onlineLink: onlineLink,
+      priority: priority,
+      category: category,
+      tags: tags,
+    ));
     if (state.hasError) throw state.error!;
     _refreshList();
   }
@@ -92,6 +93,12 @@ class MeetingDetailsController extends AutoDisposeFamilyAsyncNotifier<Meeting, S
     // time it's visible; we don't await this so detail-screen actions stay
     // snappy even if the list controller is momentarily busy.
     ref.read(meetingsListControllerProvider.notifier).refresh();
+    // The dashboard's preview is a *separate* provider (see
+    // dashboard_meetings_provider.dart) precisely so it doesn't share
+    // MeetingListScreen's filter state — which means it needs its own
+    // explicit invalidation here to pick up this change too, rather than
+    // going stale until something else happens to rebuild it.
+    ref.invalidate(dashboardMeetingsProvider);
   }
 }
 

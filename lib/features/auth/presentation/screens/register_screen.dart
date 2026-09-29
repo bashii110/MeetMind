@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:meetmind_ai/features/auth/presentation/providers/auth_controller.dart';
 import 'package:meetmind_ai/features/auth/presentation/widgets/auth_text_field.dart';
 
+import 'package:meetmind_ai/core/router/app_routes.dart';
 import '../../../../../../core/network/api_failure.dart';
 import '../../../../../../core/theme/spacing.dart';
 
@@ -41,16 +42,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     try {
-      await ref.read(authControllerProvider.notifier).register(
-            name: _name.text.trim(),
-            email: _email.text.trim(),
-            password: _password.text,
-            passwordConfirmation: _passwordConfirmation.text,
-          );
-      // Router redirect (authStatusProvider) takes over on success.
+      final email = await ref.read(authControllerProvider.notifier).register(
+        name: _name.text.trim(),
+        email: _email.text.trim(),
+        password: _password.text,
+        passwordConfirmation: _passwordConfirmation.text,
+      );
+      if (mounted) {
+        context.push(AppRoutes.otpVerification, extra: email);
+      }
     } catch (e) {
-      // ApiFailure.from unwraps DioException.error correctly — checking
-      // `e is ApiFailure` directly here is always false.
       final failure = ApiFailure.from(e);
       setState(() {
         _formError = failure.message;

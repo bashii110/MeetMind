@@ -12,6 +12,7 @@ import 'core/router/auth_status.dart';
 import 'core/storage/local_db.dart';
 import 'core/sync/outbox_sync_manager.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/glass_background.dart';
 import 'core/widgets/offline_banner.dart';
 import 'features/notifications/presentation/providers/notifications_controller.dart';
 import 'firebase_options.dart';
@@ -103,14 +104,21 @@ class MeetMindApp extends ConsumerWidget {
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.system,
       routerConfig: router,
-      // Phase 10: a persistent offline banner sits above every screen —
-      // wrapping here, rather than in each Scaffold, means new screens
-      // get it for free.
-      builder: (context, child) => Column(
-        children: [
-          const OfflineBanner(),
-          Expanded(child: child ?? const SizedBox.shrink()),
-        ],
+      // Glassmorphism theme: GlassBackground paints the app's ambient
+      // gradient plus blurred color blobs once, behind everything, so
+      // every screen's glass surfaces (core/theme/app_theme.dart's
+      // translucent CardTheme, GlassContainer, GlassAppBar) have
+      // something to refract no matter which route is showing. The
+      // persistent offline banner (Phase 10) still sits above that, same
+      // as before — wrapping here, rather than in each Scaffold, means
+      // new screens get both for free.
+      builder: (context, child) => GlassBackground(
+        child: Column(
+          children: [
+            const OfflineBanner(),
+            Expanded(child: child ?? const SizedBox.shrink()),
+          ],
+        ),
       ),
     );
   }

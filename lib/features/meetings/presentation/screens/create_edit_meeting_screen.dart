@@ -7,6 +7,7 @@ import 'package:meetmind_ai/core/network/api_failure.dart';
 import 'package:meetmind_ai/core/theme/spacing.dart';
 import 'package:meetmind_ai/core/widgets/chip_input_field.dart';
 import 'package:meetmind_ai/features/meetings/domain/entities/meeting.dart';
+import 'package:meetmind_ai/features/meetings/presentation/providers/dashboard_meeting_provider.dart';
 import 'package:meetmind_ai/features/meetings/presentation/providers/meeting_details_controller.dart';
 import 'package:meetmind_ai/features/meetings/presentation/providers/meeting_providers.dart';
 import 'package:meetmind_ai/features/meetings/presentation/providers/meetings_list_controller.dart';
@@ -108,16 +109,16 @@ class _CreateEditMeetingScreenState extends ConsumerState<CreateEditMeetingScree
     try {
       if (widget.isEditing) {
         await ref.read(meetingDetailsControllerProvider(widget.meetingId!).notifier).updateProfile(
-              title: _title.text.trim(),
-              description: _description.text.trim(),
-              date: _date,
-              time: _formattedTime(),
-              location: _location.text.trim(),
-              onlineLink: _onlineLink.text.trim(),
-              priority: _priority,
-              category: _category.text.trim(),
-              tags: _tags,
-            );
+          title: _title.text.trim(),
+          description: _description.text.trim(),
+          date: _date,
+          time: _formattedTime(),
+          location: _location.text.trim(),
+          onlineLink: _onlineLink.text.trim(),
+          priority: _priority,
+          category: _category.text.trim(),
+          tags: _tags,
+        );
       } else {
         await ref.read(createMeetingUseCaseProvider)(
           title: _title.text.trim(),
@@ -135,6 +136,12 @@ class _CreateEditMeetingScreenState extends ConsumerState<CreateEditMeetingScree
         // guaranteed to include the new meeting by the time we pop back to
         // it — otherwise the previous screen can render one stale frame.
         await ref.read(meetingsListControllerProvider.notifier).refresh();
+        // The dashboard's "Your meetings" preview is a separate provider
+        // from the list screen's controller (see
+        // dashboard_meetings_provider.dart) precisely so it can't be left
+        // showing a stale filter — but that means it also needs its own
+        // explicit invalidation to pick up the newly created meeting.
+        ref.invalidate(dashboardMeetingsProvider);
       }
 
       if (mounted) context.pop();
@@ -271,10 +278,10 @@ class _CreateEditMeetingScreenState extends ConsumerState<CreateEditMeetingScree
                 onPressed: _submitting ? null : _submit,
                 child: _submitting
                     ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
                     : Text(widget.isEditing ? 'Save changes' : 'Create meeting'),
               ),
             ],

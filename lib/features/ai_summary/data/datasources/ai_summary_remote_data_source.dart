@@ -47,7 +47,7 @@ class AiSummaryRemoteDataSource {
   /// SRD FR-11.1/11.2 — see ARCHITECTURE.md's documented
   /// `POST /meetings/{id}/assistant/query` endpoint.
   Future<String> queryAssistant(String meetingId, String prompt) async {
-    final response = await _dio.post('/meetings/$meetingId/assistant/query', data: {'prompt': prompt});
-    return response.data['data']['reply'] as String? ?? '';
+    final response = await _dio.post('/meetings/$meetingId/assistant/query', data: {'query': prompt});
+    return response.data['data']['answer'] as String? ?? '';
   }
 }

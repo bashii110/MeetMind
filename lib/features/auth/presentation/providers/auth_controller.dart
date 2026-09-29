@@ -4,17 +4,9 @@ import 'package:meetmind_ai/core/notifications/fcm_providers.dart';
 import '../../domain/entities/app_user.dart';
 import 'auth_providers.dart';
 
-/// Single source of truth for "who is signed in, if anyone." `null` data
-/// means unauthenticated; loading means we're still checking a stored
-/// session; error means the last action (login/register/etc.) failed.
-///
-/// core/router/auth_status.dart derives its route-guard decisions from
-/// this controller's state, so login/logout here immediately reflects in
-/// navigation without any extra wiring.
 class AuthController extends AsyncNotifier<AppUser?> {
   @override
   Future<AppUser?> build() async {
-    // App start: is there a still-valid stored session?
     return ref.read(getCurrentUserUseCaseProvider)();
   }
 
@@ -27,25 +19,41 @@ class AuthController extends AsyncNotifier<AppUser?> {
     if (state.hasError) throw state.error!;
   }
 
-  Future<void> register({
+  /// Registration now only sends an OTP — it deliberately does NOT touch
+  /// `state` (the person isn't signed in yet), so the splash/router
+  /// redirect logic isn't affected. Returns the email being verified so
+  /// the caller can navigate to the OTP screen; throws on failure the
+  /// same way every other auth action here does.
+  Future<String> register({
     required String name,
     required String email,
     required String password,
     required String passwordConfirmation,
     String? timezone,
   }) async {
+    final challenge = await ref.read(registerUseCaseProvider)(
+      name: name,
+      email: email,
+      password: password,
+      passwordConfirmation: passwordConfirmation,
+      timezone: timezone,
+    );
+    return challenge.email;
+  }
+
+  /// Completes registration: verifies the OTP and, on success, signs the
+  /// user in (mirrors login()/register()'s AsyncLoading/guard pattern).
+  Future<void> verifyOtp({required String email, required String otp}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      final session = await ref.read(registerUseCaseProvider)(
-        name: name,
-        email: email,
-        password: password,
-        passwordConfirmation: passwordConfirmation,
-        timezone: timezone,
-      );
+      final session = await ref.read(verifyOtpUseCaseProvider)(email: email, otp: otp);
       return session.user;
     });
     if (state.hasError) throw state.error!;
+  }
+
+  Future<void> resendOtp(String email) {
+    return ref.read(resendOtpUseCaseProvider)(email);
   }
 
   Future<void> loginWithGoogle() async {
@@ -58,13 +66,8 @@ class AuthController extends AsyncNotifier<AppUser?> {
   }
 
   Future<void> logout() async {
-    // 1. Remove FCM token while auth token is still valid
     await ref.read(fcmServiceProvider).unregister();
-
-    // 2. Logout from Laravel
     await ref.read(logoutUseCaseProvider)();
-
-    // 3. Update auth state
     state = const AsyncData(null);
   }
 
@@ -86,8 +89,6 @@ class AuthController extends AsyncNotifier<AppUser?> {
     );
   }
 
-  /// Lets other features (e.g. profile updates) patch the cached user
-  /// without a full re-fetch.
   void setUser(AppUser user) => state = AsyncData(user);
 }
 

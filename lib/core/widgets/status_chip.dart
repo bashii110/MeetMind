@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// DESIGN.md 6 shared widget library. Renders any status string
-/// (meeting status, task status, invite status...) as a small colored
-/// pill. Colors are looked up by exact string match, with a neutral
-/// fallback so new statuses degrade gracefully instead of crashing.
+/// DESIGN.md 6 shared widget library — glass edition. Renders any status
+/// string (meeting status, task status, invite status...) as a small
+/// translucent pill with a thin tinted border, rather than a flat fill,
+/// so it reads as glass instead of a solid sticker, consistent with the
+/// rest of the theme (see `core/theme/app_theme.dart`). Colors are
+/// looked up by exact string match, with a neutral fallback so new
+/// statuses degrade gracefully instead of crashing.
 class StatusChip extends StatelessWidget {
   const StatusChip({super.key, required this.status});
 
@@ -28,8 +31,9 @@ class StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
+        color: color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Text(
         label[0].toUpperCase() + label.substring(1),

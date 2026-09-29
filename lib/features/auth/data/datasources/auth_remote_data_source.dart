@@ -3,30 +3,39 @@ import 'package:dio/dio.dart';
 import '../models/app_user_model.dart';
 import '../models/auth_session_model.dart';
 
-/// Talks to POST/GET /api/v1/auth/* — see backend/routes/api.php.
-/// Returns typed models; error mapping is handled by ErrorMappingInterceptor
-/// (core/network), so callers here just propagate DioExceptions upward.
 class AuthRemoteDataSource {
   const AuthRemoteDataSource(this._dio);
 
   final Dio _dio;
 
-  Future<AuthSessionModel> register({
+  /// Registration now only triggers an OTP email — see
+  /// backend AuthController::register(); it no longer returns tokens.
+  Future<void> register({
     required String name,
     required String email,
     required String password,
     required String passwordConfirmation,
     String? timezone,
   }) async {
-    final response = await _dio.post('/auth/register', data: {
+    await _dio.post('/auth/register', data: {
       'name': name,
       'email': email,
       'password': password,
       'password_confirmation': passwordConfirmation,
       if (timezone != null) 'timezone': timezone,
     });
+  }
 
+  Future<AuthSessionModel> verifyOtp({required String email, required String otp}) async {
+    final response = await _dio.post('/auth/verify-otp', data: {
+      'email': email,
+      'otp': otp,
+    });
     return AuthSessionModel.fromJson(response.data['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> resendOtp(String email) {
+    return _dio.post('/auth/resend-otp', data: {'email': email});
   }
 
   Future<AuthSessionModel> login({
@@ -49,8 +58,6 @@ class AuthRemoteDataSource {
     return AuthSessionModel.fromJson(response.data['data'] as Map<String, dynamic>);
   }
 
-  /// Must be called with the Dio instance sending the *refresh* token as
-  /// the bearer token — see AuthRepositoryImpl.getCurrentUser/refresh.
   Future<AuthSessionModel> refresh() async {
     final response = await _dio.post('/auth/refresh');
 

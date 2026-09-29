@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meetmind_ai/features/auth/presentation/screens/otp_varification_screen.dart';
 
 import '../../features/admin/presentation/screens/admin_screen.dart';
 import '../../features/analytics/presentation/screens/analytics_screen.dart';
@@ -49,7 +50,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           loc == AppRoutes.login ||
           loc == AppRoutes.register ||
           loc == AppRoutes.forgotPassword ||
-          loc == AppRoutes.resetPassword;
+          loc == AppRoutes.resetPassword ||
+          loc == AppRoutes.otpVerification;
 
       // Still resolving a possibly-stored session (AuthController.build()):
       // stay put on splash rather than redirecting anywhere yet, to avoid
@@ -95,6 +97,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => ResetPasswordScreen(
           token: state.uri.queryParameters['token'] ?? '',
           email: state.uri.queryParameters['email'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.otpVerification,
+        builder: (context, state) => OtpVerificationScreen(
+          email: state.extra as String? ?? '',
         ),
       ),
       GoRoute(

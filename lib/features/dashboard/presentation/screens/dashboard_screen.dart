@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meetmind_ai/features/meetings/presentation/providers/dashboard_meeting_provider.dart';
 
-import '../../../../core/insights/productivity_tips.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/spacing.dart';
 import '../../../../core/widgets/empty_state.dart';
-import '../../../../core/widgets/productivity_tips_card.dart';
-import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/sync_status_chip.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
-import '../../../meetings/presentation/providers/meetings_list_controller.dart';
 import '../../../meetings/presentation/widgets/meeting_card.dart';
 import '../../../notifications/presentation/providers/notifications_controller.dart';
 import '../../../tasks/presentation/providers/task_stats_provider.dart';
@@ -20,18 +17,25 @@ import '../../../tasks/presentation/providers/task_stats_provider.dart';
 /// added a calendar shortcut in the app bar; Phase 7 added a Workspaces
 /// shortcut (SRD FR-10.1); Phase 8 added a global Search shortcut (SRD
 /// FR-12.1); Phase 9 added an Analytics shortcut for every signed-in user
-/// (SRD FR-13.1/FR-2.5) and an Admin shortcut gated to `system_admin`;
-/// Phase 10 added the sync-status chip; Phase 12 adds a skeleton-loading
-/// state + fade transition for the meetings preview, and the
-/// "productivity recommendations" bonus feature as a card between the
-/// meetings and tasks sections.
+/// (SRD FR-13.1/FR-2.5) and an Admin shortcut gated to `system_admin`.
+/// Phase 10 adds a sync-status chip (pending offline changes / task
+/// conflicts awaiting review) next to Notifications, since it's the same
+/// kind of "needs your attention" signal.
+///
+/// Bugfix: the meetings preview below now reads `dashboardMeetingsProvider`
+/// instead of `meetingsListControllerProvider` — the latter is shared
+/// with `MeetingListScreen` and carries whatever filter/search is
+/// currently applied there, which meant filtering to "Scheduled" (or
+/// searching) on the Meetings screen and pressing back left the
+/// dashboard showing that same filtered result. See
+/// `dashboard_meetings_provider.dart`'s doc comment for the full story.
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authControllerProvider).valueOrNull;
-    final meetings = ref.watch(meetingsListControllerProvider);
+    final meetings = ref.watch(dashboardMeetingsProvider);
     final notifications = ref.watch(notificationsControllerProvider);
     final taskStats = ref.watch(taskStatsProvider);
     final unreadCount = notifications.valueOrNull?.unreadCount ?? 0;
@@ -155,7 +159,15 @@ class DashboardScreen extends ConsumerWidget {
         label: const Text('New meeting'),
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(meetingsListControllerProvider.notifier).refresh(),
+        onRefresh: () async {
+          // Both are FutureProvider.autoDispose — ref.refresh(...future)
+          // invalidates and returns the new Future so this can await it,
+          // same convention used for a manual pull-to-refresh elsewhere.
+          await Future.wait([
+            ref.refresh(dashboardMeetingsProvider.future),
+            ref.refresh(taskStatsProvider.future),
+          ]);
+        },
         child: ListView(
           padding: const EdgeInsets.all(Spacing.lg),
           children: [
@@ -178,58 +190,46 @@ class DashboardScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: Spacing.sm),
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              child: meetings.when(
-                loading: () => const KeyedSubtree(
-                  key: ValueKey('loading'),
-                  child: SkeletonLoader(
-                    child: Column(children: [SkeletonCard(height: 96), SkeletonCard(height: 96)]),
+            meetings.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: Spacing.xl),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (error, _) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: Spacing.lg),
+                child: Text(
+                  'Could not load meetings.',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
                   ),
                 ),
-                error: (error, _) => KeyedSubtree(
-                  key: const ValueKey('error'),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: Spacing.lg),
-                    child: Text(
-                      'Could not load meetings.',
-                      style: TextStyle(color: Theme.of(context).colorScheme.error),
-                    ),
-                  ),
-                ),
-                data: (list) {
-                  if (list.items.isEmpty) {
-                    return const KeyedSubtree(
-                      key: ValueKey('empty'),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: Spacing.md),
-                        child: EmptyState(
-                          icon: Icons.event_busy,
-                          title: 'No meetings yet',
-                          message: 'Tap "New meeting" to schedule your first one.',
-                        ),
-                      ),
-                    );
-                  }
-
-                  final preview = list.items.take(3);
-                  return KeyedSubtree(
-                    key: const ValueKey('data'),
-                    child: Column(
-                      children: [
-                        for (final meeting in preview)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: Spacing.md),
-                            child: MeetingCard(
-                              meeting: meeting,
-                              onTap: () => context.push(AppRoutes.meetingDetailsPath(meeting.id)),
-                            ),
-                          ),
-                      ],
+              ),
+              data: (list) {
+                if (list.items.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: Spacing.md),
+                    child: EmptyState(
+                      icon: Icons.event_busy,
+                      title: 'No meetings yet',
+                      message: 'Tap "New meeting" to schedule your first one.',
                     ),
                   );
-                },
-              ),
+                }
+
+                final preview = list.items.take(3);
+                return Column(
+                  children: [
+                    for (final meeting in preview)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: Spacing.md),
+                        child: MeetingCard(
+                          meeting: meeting,
+                          onTap: () => context.push(AppRoutes.meetingDetailsPath(meeting.id)),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: Spacing.xl),
             Row(
@@ -273,15 +273,6 @@ class DashboardScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            if (taskStats.valueOrNull != null) ...[
-              const SizedBox(height: Spacing.lg),
-              ProductivityTipsCard(
-                tips: buildProductivityTips(
-                  taskStats: taskStats.valueOrNull!,
-                  upcomingMeetings: meetings.valueOrNull?.items ?? const [],
-                ),
-              ),
-            ],
           ],
         ),
       ),

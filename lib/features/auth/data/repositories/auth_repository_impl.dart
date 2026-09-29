@@ -4,6 +4,7 @@ import '../../../../core/network/api_failure.dart';
 import '../../../../core/storage/token_storage.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/entities/auth_session.dart';
+import '../../domain/entities/otp_challenge.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
 import '../datasources/google_auth_data_source.dart';
@@ -22,23 +23,32 @@ class AuthRepositoryImpl implements AuthRepository {
   final TokenStorage _tokens;
 
   @override
-  Future<AuthSession> register({
+  Future<OtpChallenge> register({
     required String name,
     required String email,
     required String password,
     required String passwordConfirmation,
     String? timezone,
   }) async {
-    final session = await _remote.register(
+    await _remote.register(
       name: name,
       email: email,
       password: password,
       passwordConfirmation: passwordConfirmation,
       timezone: timezone,
     );
+    return OtpChallenge(email: email);
+  }
+
+  @override
+  Future<AuthSession> verifyOtp({required String email, required String otp}) async {
+    final session = await _remote.verifyOtp(email: email, otp: otp);
     await _persist(session);
     return session;
   }
+
+  @override
+  Future<void> resendOtp(String email) => _remote.resendOtp(email);
 
   @override
   Future<AuthSession> login({required String email, required String password}) async {
@@ -60,8 +70,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remote.logout();
     } on DioException {
-      // Best-effort: even if the revoke call fails (e.g. offline), still
-      // clear local tokens so the user is signed out on this device.
+      // Best-effort — see original comment.
     } finally {
       await _tokens.clear();
     }
@@ -77,7 +86,6 @@ class AuthRepositoryImpl implements AuthRepository {
     } on DioException catch (e) {
       final failure = e.error;
       if (failure is ApiFailure && failure.statusCode == 401) {
-        // Access token expired — try the refresh token before giving up.
         return _tryRefresh();
       }
       rethrow;
@@ -89,11 +97,6 @@ class AuthRepositoryImpl implements AuthRepository {
     if (refreshToken == null) return null;
 
     try {
-      // AuthRemoteDataSource.refresh() relies on the shared Dio's
-      // AuthInterceptor, which always sends the *access* token. Refreshing
-      // needs the *refresh* token instead, so this repository briefly
-      // writes it into the access-token slot, calls refresh, then restores
-      // the real pair from the response. See core/network/api_client.dart.
       await _tokens.saveTokens(accessToken: refreshToken, refreshToken: refreshToken);
       final session = await _remote.refresh();
       await _persist(session);
@@ -123,7 +126,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   Future<void> _persist(AuthSession session) => _tokens.saveTokens(
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken,
-      );
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
+  );
 }

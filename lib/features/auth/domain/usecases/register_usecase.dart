@@ -1,4 +1,4 @@
-import '../entities/auth_session.dart';
+import '../entities/otp_challenge.dart';
 import '../repositories/auth_repository.dart';
 
 class RegisterUseCase {
@@ -6,7 +6,7 @@ class RegisterUseCase {
 
   final AuthRepository _repository;
 
-  Future<AuthSession> call({
+  Future<OtpChallenge> call({
     required String name,
     required String email,
     required String password,

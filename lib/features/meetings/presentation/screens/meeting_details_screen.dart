@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../widgets/meeting_files_tab.dart';
 import '../../../../core/network/api_failure.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/spacing.dart';
@@ -170,7 +171,7 @@ class _MeetingDetailsScreenState extends ConsumerState<MeetingDetailsScreen>
               SummaryTab(meeting: m),
               AssistantTab(meetingId: m.id),
               TaskCandidatesTab(meetingId: m.id),
-              const _ComingSoonTab(label: 'Files', phase: 'Phase 7'),
+              MeetingFilesTab(meetingId: m.id),
             ],
           ),
         ),
