@@ -193,3 +193,22 @@ simplifications) is in each `PHASE{N}_README.md` and summarized in
 Portfolio project — see `Architecture.md`, `srd.md`, `design.md`, and
 `phases.md` for the full spec this scaffold implements. License TBD by
 the project owner before the public release tag.
+
+
+
+
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 54 AM (1)" src="https://github.com/user-attachments/assets/730959d3-97da-4703-a0d0-415e164658b2" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 53 AM" src="https://github.com/user-attachments/assets/c734521a-3653-4f7a-9818-06f01149031f" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 53 AM (1)" src="https://github.com/user-attachments/assets/85bae1de-4c97-42a2-a74c-9b5287a27228" />
+<img width="627" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 52 AM" src="https://github.com/user-attachments/assets/8ac52a02-8c43-47c9-918a-e19f1faa2827" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 52 AM (2)" src="https://github.com/user-attachments/assets/ae63047d-59f6-4fd0-b783-4563e80238e6" />
+<img width="502" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 52 AM (1)" src="https://github.com/user-attachments/assets/85ab4a9f-8a9f-43a0-8c08-9a9b1a88fb07" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 51 AM" src="https://github.com/user-attachments/assets/103fdd9a-592e-4229-ac4b-e8a7b3607a5e" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 51 AM (1)" src="https://github.com/user-attachments/assets/e3dd06e4-9bee-445b-a841-22bf1057eaa0" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 50 AM" src="https://github.com/user-attachments/assets/2dc2c095-a938-4683-b782-2d1509eb4dd6" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 50 AM (2)" src="https://github.com/user-attachments/assets/87dd8e0a-aec5-4f83-bcf1-92a82add8b57" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 50 AM (1)" src="https://github.com/user-attachments/assets/454e711b-feaf-407d-a2b1-0d177d92be52" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 49 AM" src="https://github.com/user-attachments/assets/11333401-a470-4e12-80f5-828390e6280f" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 54 AM" src="https://github.com/user-attachments/assets/573f593e-1f5c-4c8a-92cf-657c717aeba8" />
+<img width="720" height="1600" alt="WhatsApp Image 2026-09-29 at 10 58 54 AM (2)" src="https://github.com/user-attachments/assets/671484c5-8785-4ac3-9266-90d8632ba10e" />
+
